@@ -1,0 +1,8 @@
+/assimp-3.1.1
+/build
+/cmake-build-debug
+/glad
+/glfw-3.4.bin.MACOS
+/glm
+/img
+*.zip
