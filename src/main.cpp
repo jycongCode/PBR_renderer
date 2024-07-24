@@ -4,6 +4,7 @@
 #include "Window.h"
 #include "Skybox.h"
 #include "Sphere.h"
+#include "Material.h"
 #include "Light.h"
 #include "Utils.h"
 // region time
@@ -22,7 +23,6 @@ Transform transform;
 void framebuffer_size_callback(GLFWwindow* window,int width,int height){
     glViewport(0,0,width,height);
 }
-
 bool firstMouse = true;
 float lastX,lastY;
 bool isCamera = false;
@@ -48,7 +48,9 @@ void mouse_pos_callback(GLFWwindow* window,double xpos,double ypos){
         transform.Rotate(axis,angle);
     }
 }
-
+void mouse_scroll_callback(GLFWwindow* window,double xoffset,double yoffset){
+    camera.ProcessMouseScroll(yoffset);
+}
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_RIGHT){
@@ -57,7 +59,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         isObject = (action == GLFW_PRESS);
     }
 }
-
 void keyboard_process(GLFWwindow* window){
     if(glfwGetKey(window,GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
@@ -66,22 +67,23 @@ void keyboard_process(GLFWwindow* window){
 
 int main()
 {
-    WindowCallback callbacks(framebuffer_size_callback,mouse_pos_callback,mouse_button_callback);
+    WindowCallback callbacks(framebuffer_size_callback,mouse_pos_callback,mouse_button_callback,mouse_scroll_callback);
     window.SetUp(callbacks);
-    Skybox *skybox = new Skybox("../img/skybox",false);
+    Skybox *skybox = new Skybox("../Resources/img/skybox",false);
     Sphere *sphere = new Sphere();
-    Shader shader("sDirLight");
-    glm::vec3 lightDir = glm::vec3(-1.0f,-1.0f,0.0f);
-    glm::vec3 lightColor = glm::vec3(1.0f,1.0f,1.0f);
-    shader.SetDirLight(lightDir,lightColor);
-    GLuint sphereTexture = Utils::loadTexture2D("../img/bricks2.jpg", false);
+    PBRMaterial material("../Resources/Textures/RustedIron", false);
+    Shader shaderPBR("PBR");
+    Shader shaderVis("TangentVis",true);
+    DirLight lightDir(-1.0f,0.0f,0.0f,0.5f,0.5f,0.5f);
     while(!window.ShouldWindowClose()){
         updateTime();
         keyboard_process(window.GetWindowHandle());
         window.ClearWindow();
         // render
+        glEnable(GL_DEPTH_TEST);
         skybox->Draw(camera,window);
-        sphere->Draw(shader,camera,window,transform,sphereTexture);
+        sphere->Draw(camera,window,transform,shaderPBR,material,lightDir);
+//        sphere->Draw(camera,window,transform,shaderVis,material,lightDir);
         window.WindowUpdate();
     }
 

@@ -4,8 +4,11 @@
 
 #ifndef LEARNOPENGL_SPHERE_H
 #define LEARNOPENGL_SPHERE_H
-#include <Shader.h>
+#include "Shader.h"
 #include "Transform.h"
+#include "Material.h"
+#include "Camera.h"
+#include "Window.h"
 class Sphere{
 public:
     Sphere(){
@@ -16,6 +19,7 @@ public:
         std::vector<glm::vec3> positions;
         std::vector<glm::vec2> uv;
         std::vector<glm::vec3> normals;
+        std::vector<glm::vec3> tangents;
 
         const unsigned int X_SEGMENTS = 64;
         const unsigned int Y_SEGMENTS = 64;
@@ -31,28 +35,50 @@ public:
                 float zPos = std::sin(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
 
                 positions.push_back(glm::vec3(xPos, yPos, zPos));
-                uv.push_back(glm::vec2(xSegment, ySegment));
+                uv.push_back(glm::vec2(xSegment, 1.0 - ySegment));
                 normals.push_back(glm::vec3(xPos, yPos, zPos));
             }
         }
 
+//        bool oddRow = false;
+//        for (unsigned int y = 0; y < Y_SEGMENTS; ++y)
+//        {
+//            if (!oddRow) // even rows: y == 0, y == 2; and so on
+//            {
+//                for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
+//                {
+//                    indices.push_back(y       * (X_SEGMENTS + 1) + x);
+//                    indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+//                }
+//            }
+//            else
+//            {
+//                for (int x = X_SEGMENTS; x >= 0; --x)
+//                {
+//                    indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+//                    indices.push_back(y       * (X_SEGMENTS + 1) + x);
+//                }
+//            }
+//            oddRow = !oddRow;
+//        }
+
         bool oddRow = false;
-        for (unsigned int y = 0; y < Y_SEGMENTS; ++y)
+        for (unsigned int x = 0; x < X_SEGMENTS; ++x)
         {
             if (!oddRow) // even rows: y == 0, y == 2; and so on
             {
-                for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
+                for (unsigned int y = 0; y <= Y_SEGMENTS; ++y)
                 {
-                    indices.push_back(y       * (X_SEGMENTS + 1) + x);
-                    indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+                    indices.push_back(x       * (Y_SEGMENTS + 1) + y);
+                    indices.push_back((x + 1) * (Y_SEGMENTS + 1) + y);
                 }
             }
             else
             {
-                for (int x = X_SEGMENTS; x >= 0; --x)
+                for (int y = Y_SEGMENTS; y >= 0; --y)
                 {
-                    indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
-                    indices.push_back(y       * (X_SEGMENTS + 1) + x);
+                    indices.push_back((x + 1) * (Y_SEGMENTS + 1) + y);
+                    indices.push_back(x       * (Y_SEGMENTS + 1) + y);
                 }
             }
             oddRow = !oddRow;
@@ -75,6 +101,7 @@ public:
                 data.push_back(uv[i].x);
                 data.push_back(uv[i].y);
             }
+
         }
 
         glBindVertexArray(sphereVAO);
@@ -92,31 +119,39 @@ public:
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
     }
 
-    void Draw(Shader shader,Camera camera,Window window,Transform transform){
-        glEnable(GL_DEPTH_TEST);
+    void Draw(Camera camera,Window window,Transform transform,Shader shader,PBRMaterial material,DirLight light){
+        glBindVertexArray(sphereVAO);
         shader.use();
-        shader.setVec3("viewPos",camera.Position);
-        shader.setFloat("shininess",32);
+        // transform
         shader.setMat4("model",transform.GetModel());
         glm::mat4 view = camera.GetViewMatrix();
         float scrWidth = static_cast<float>(window.GetWindowWidth());
         float scrHeight = static_cast<float>(window.GetWindowHeight());
         float aspectRatio = scrWidth / scrHeight;
-        glm::mat4 projection = glm::perspective(camera.Zoom,aspectRatio,camera.nearPlane,camera.farPlane);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),aspectRatio,camera.nearPlane,camera.farPlane);
         shader.setMat4("view",view);
         shader.setMat4("projection",projection);
-        glBindVertexArray(sphereVAO);
+        // camera
+        shader.setVec3("viewPos",camera.Position);
+        // material
+        shader.setInt("material.albedo",0);
+        shader.setInt("material.metallic",1);
+        shader.setInt("material.roughness",2);
+        shader.setInt("material.normal",3);
+        shader.setFloat("material.ao",material.ao);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D,material.albedoTex);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D,material.metallicTex);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D,material.roughnessTex);
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D,material.normalTex);
+        // light
+        shader.setVec3("light.Direction",light.Direction);
+        shader.setVec3("light.Color",light.Color);
         glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
-    }
-
-    void Draw(Shader shader,Camera camera,Window window,Transform transform,GLuint texture){
-        shader.InitDirLight();
-        shader.use();
-        shader.setInt("tex",0);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D,texture);
-        Draw(shader,camera,window,transform);
     }
 
     void Destroy(){

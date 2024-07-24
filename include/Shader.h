@@ -205,35 +205,10 @@ public:
         glUniform2fv(uniformLocation,1,glm::value_ptr(value));
     }
 
-    void SetDirLight(glm::vec3 dir,glm::vec3 color){
-        dirLight.Direction = glm::normalize(dir);
-        dirLight.Color = color;
-    }
-
-    void InitDirLight(){
-        use();
-        setVec3("light.Direction",dirLight.Direction);
-        setVec3("light.Color",dirLight.Color);
-    }
-
-    void SetPointLight(glm::vec3 pos,glm::vec3 color){
-        pointLight.Position = pos;
-        pointLight.Position = color;
-    }
-
-    void InitPointLight(){
-        use();
-        setVec3("light.Position",pointLight.Position);
-        setVec3("light.Color",pointLight.Color);
-    }
-
 private:
     unsigned int vertexShader;
     unsigned int fragmentShader;
     unsigned int geometryShader;
-    DirLight dirLight;
-    PointLight pointLight;
-    SpotLight spotLight;
     void checkProgramLinkStatus(GLuint program){
         int success;
         char infoLog[512];

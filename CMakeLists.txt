@@ -28,6 +28,7 @@ set(SOURCES ${SRC_DIR}/glad.c ${SRC_DIR}/main.cpp
         include/Window.h
         include/Transform.h
         include/Light.h
+        include/Material.h
 )
 add_executable(LearnOpenGL ${SOURCES})
 # 链接GLFW库

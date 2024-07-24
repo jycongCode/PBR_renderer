@@ -14,6 +14,10 @@ enum LightType{
 };
 
 struct DirLight{
+    DirLight(float x,float y,float z,float r,float g,float b){
+        Direction = glm::vec3(x,y,z);
+        Color = glm::vec3(r,g,b);
+    }
     glm::vec3 Direction;
     glm::vec3 Color;
 };

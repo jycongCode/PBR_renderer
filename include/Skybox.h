@@ -41,7 +41,7 @@ public:
         float scrWidth = static_cast<float>(window.GetWindowWidth());
         float scrHeight = static_cast<float>(window.GetWindowHeight());
         float aspectRatio = scrWidth / scrHeight;
-        glm::mat4 projection = glm::perspective(camera.Zoom,aspectRatio,camera.nearPlane,camera.farPlane);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),aspectRatio,camera.nearPlane,camera.farPlane);
         shader->setMat4("view",view);
         shader->setMat4("projection",projection);
         glBindVertexArray(cubeVAO);

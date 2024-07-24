@@ -9,15 +9,17 @@
 #include <iostream>
 
 struct WindowCallback{
-    WindowCallback(GLFWframebuffersizefun fsc,GLFWcursorposfun mpc,GLFWmousebuttonfun mbc){
+    WindowCallback(GLFWframebuffersizefun fsc,GLFWcursorposfun mpc,GLFWmousebuttonfun mbc,GLFWscrollfun msc){
         framebuffer_size_callback = fsc;
         mouse_pos_callback = mpc;
         mouse_button_callback = mbc;
+        mouse_scroll_callback = msc;
     }
 
     GLFWframebuffersizefun framebuffer_size_callback;
     GLFWcursorposfun mouse_pos_callback;
     GLFWmousebuttonfun mouse_button_callback;
+    GLFWscrollfun  mouse_scroll_callback;
 };
 
 class Window{
@@ -48,6 +50,7 @@ public:
         glfwSetFramebufferSizeCallback(windowHandle, callbacks.framebuffer_size_callback);
         glfwSetCursorPosCallback(windowHandle,callbacks.mouse_pos_callback);
         glfwSetMouseButtonCallback(windowHandle, callbacks.mouse_button_callback);
+        glfwSetScrollCallback(windowHandle,callbacks.mouse_scroll_callback);
     }
     bool ShouldWindowClose(){
         return glfwWindowShouldClose(windowHandle);
