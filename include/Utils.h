@@ -48,7 +48,7 @@ namespace Utils{
         return textureID;
     }
 
-    unsigned int loadTexture3D(char const*path,bool gammaCorrection){
+    unsigned int loadTexture3D(char const*path,bool isHDR,bool gammaCorrection){
         std::vector<std::string> faces
                 {
                         "right.jpg",
@@ -67,9 +67,35 @@ namespace Utils{
             data = stbi_load((std::string(path) + "/" + faces[i]).c_str(),&width,&height,&nChannels,0);
             GLuint format;
             GLuint internalFormat;
-            if(nChannels == 1) {internalFormat = GL_RED; format = GL_RED; }
-            if(nChannels == 3) {internalFormat = GL_SRGB; format = GL_RGB; }
-            if(nChannels == 4) {internalFormat = GL_SRGB_ALPHA; format = GL_RGBA; }
+            if(nChannels == 1) {
+                if(isHDR){
+                    internalFormat = GL_R16F;
+                }else{
+                    internalFormat = GL_RED;
+                }
+                    format = GL_RED;
+            }
+            if(nChannels == 3){
+                if(isHDR){
+                    internalFormat = GL_RGB16F;
+                }else if(gammaCorrection) {
+                    internalFormat = GL_SRGB;
+                }else{
+                    internalFormat = GL_RGB;
+                }
+                format = GL_RGB;
+            }
+            if(nChannels == 4)
+            {
+                if(isHDR){
+                    internalFormat = GL_RGBA16F;
+                }else if(gammaCorrection){
+                    internalFormat = GL_SRGB_ALPHA;
+                }else{
+                    internalFormat = GL_RGBA;
+                }
+                format = GL_RGBA;
+            }
             if(data){
                 glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,0,internalFormat,width,height,0,format,GL_UNSIGNED_BYTE,data);
                 stbi_image_free(data);

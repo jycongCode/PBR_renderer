@@ -18,7 +18,7 @@ void main(){
     vec3 fragPos = vec3(model * vec4(aPos,1.0));
     mat3 normalMatrix = mat3(transpose(inverse(model)));
     vec3 normal = normalize(normalMatrix * aNormal);
-    vec3 tangent = normalize(normalMatrix * vec3(-aPos.y,aPos.x+0.001,0.0));
+    vec3 tangent = normalize(normalMatrix * vec3(-aPos.z,0.0,aPos.x + 0.001));
     tangent = normalize(tangent - dot(tangent, normal) * normal);
     vec3 bitangent = cross(normal,tangent);
     vs_out.TBN = mat3(tangent,bitangent,normal);

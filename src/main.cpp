@@ -6,6 +6,7 @@
 #include "Sphere.h"
 #include "Material.h"
 #include "Light.h"
+#include "IrradianceMap.h"
 #include "Utils.h"
 // region time
 float deltaTime = 0.0f;
@@ -74,7 +75,8 @@ int main()
     PBRMaterial material("../Resources/Textures/RustedIron", false);
     Shader shaderPBR("PBR");
     Shader shaderVis("TangentVis",true);
-    DirLight lightDir(-1.0f,0.0f,0.0f,0.5f,0.5f,0.5f);
+    DirLight lightDir(-1.0f,0.0f,1.0f,0.5f,0.5f,0.5f);
+    IrradianceMap irradianceMap("../Resources/img/skybox",32,32,false);
     while(!window.ShouldWindowClose()){
         updateTime();
         keyboard_process(window.GetWindowHandle());
@@ -86,9 +88,11 @@ int main()
 //        sphere->Draw(camera,window,transform,shaderVis,material,lightDir);
         window.WindowUpdate();
     }
-
+    shaderVis.Destroy();
+    shaderPBR.Destroy();
     skybox->Destroy();
     sphere->Destroy();
+    irradianceMap.Destroy();
     window.CloseWindow();
     delete(skybox);
     delete(sphere);

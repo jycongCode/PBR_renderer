@@ -40,28 +40,6 @@ public:
             }
         }
 
-//        bool oddRow = false;
-//        for (unsigned int y = 0; y < Y_SEGMENTS; ++y)
-//        {
-//            if (!oddRow) // even rows: y == 0, y == 2; and so on
-//            {
-//                for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
-//                {
-//                    indices.push_back(y       * (X_SEGMENTS + 1) + x);
-//                    indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
-//                }
-//            }
-//            else
-//            {
-//                for (int x = X_SEGMENTS; x >= 0; --x)
-//                {
-//                    indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
-//                    indices.push_back(y       * (X_SEGMENTS + 1) + x);
-//                }
-//            }
-//            oddRow = !oddRow;
-//        }
-
         bool oddRow = false;
         for (unsigned int x = 0; x < X_SEGMENTS; ++x)
         {
@@ -153,7 +131,12 @@ public:
         glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
     }
-
+    void Draw(Shader shader){
+        glBindVertexArray(sphereVAO);
+        shader.use();
+        glDrawElements(GL_TRIANGLE_STRIP,indexCount,GL_UNSIGNED_INT,0);
+        glBindVertexArray(0);
+    }
     void Destroy(){
         glDeleteVertexArrays(1,&sphereVAO);
         glDeleteBuffers(1,&vbo);
