@@ -9,6 +9,7 @@
 #include "Material.h"
 #include "Camera.h"
 #include "Window.h"
+#include "IBL.h"
 class Sphere{
 public:
     Sphere(){
@@ -97,7 +98,7 @@ public:
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
     }
 
-    void Draw(Camera camera,Window window,Transform transform,Shader shader,PBRMaterial material,DirLight light){
+    void Draw(Camera camera,Window window,Transform transform,Shader shader,PBRMaterial material,DirLight light,IBL ibl){
         glBindVertexArray(sphereVAO);
         shader.use();
         // transform
@@ -116,6 +117,9 @@ public:
         shader.setInt("material.metallic",1);
         shader.setInt("material.roughness",2);
         shader.setInt("material.normal",3);
+        shader.setInt("irradianceMap",4);
+        shader.setInt("prefilterMap",5);
+        shader.setInt("brdfLUT",6);
         shader.setFloat("material.ao",material.ao);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D,material.albedoTex);
@@ -125,6 +129,12 @@ public:
         glBindTexture(GL_TEXTURE_2D,material.roughnessTex);
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D,material.normalTex);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_CUBE_MAP,ibl.irr.irradianceMap);
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_CUBE_MAP,ibl.spec.prefilterMap);
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D,ibl.spec.integrateBRDFMap);
         // light
         shader.setVec3("light.Direction",light.Direction);
         shader.setVec3("light.Color",light.Color);

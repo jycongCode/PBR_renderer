@@ -43,7 +43,7 @@ public:
     float MovementSpeed;
     float MouseSensitivity;
     float Zoom;
-    float ArmLength = 3.0f;
+    float ArmLength = 3.5f;
     glm::vec3 targetPos = glm::vec3(0.0f);
 
     float nearPlane = 0.1f;

@@ -2,8 +2,9 @@
 out vec4 FragColor;
 in vec3 TexCoords;
 uniform samplerCube skybox;
+uniform float lod;
 void main(){
-    vec3 color = textureLod(skybox,TexCoords,0).rgb;
+    vec3 color = textureLod(skybox,TexCoords,0.0).rgb;
     color = color / (color + vec3(1.0));
     color = pow(color,vec3(1.0/2.2));
     FragColor = vec4(color,1.0);

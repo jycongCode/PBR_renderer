@@ -23,6 +23,9 @@ struct DirLight{
 };
 uniform DirLight light;
 
+uniform samplerCube irradianceMap;
+uniform samplerCube prefilterMap;
+uniform sampler2D brdfLUT;
 uniform vec3 viewPos;
 const float PI = 3.14159265359;
 
@@ -63,8 +66,12 @@ vec3 fresnelSchlick(float cosTheta,vec3 F0){
     return F0 + (1.0-F0) * pow(clamp(1.0-cosTheta,0.0,1.0),5.0);
 }
 
+vec3 fresnelSchlickRoughness(float cosTheta,vec3 F0,float roughness){
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
+}
 void main(){
     vec3 N = normalize(fs_in.TBN * texture(material.normal,fs_in.TexCoord).xyz);
+//    N = fs_in.Normal;
     vec3 V = normalize(viewPos - fs_in.FragPos);
 
     float roughness = texture(material.roughness,fs_in.TexCoord).r;
@@ -99,6 +106,19 @@ void main(){
     color = color / (color + vec3(1.0));
     color = pow(color,vec3(1.0/2.2));
 
+    vec3 F_IBL = fresnelSchlickRoughness(max(dot(N,V),0.0),F0,roughness);
+    vec3 R = reflect(-V,N);
+    const float MAX_REFLECTION_LOD = 4.0;
+    vec3 prefilterColor = textureLod(prefilterMap,R,roughness * MAX_REFLECTION_LOD).rgb;
+    vec2 envBRDF = texture(brdfLUT,vec2(max(dot(N,V),0.0),roughness)).rg;
+    vec3 specularIBL = prefilterColor * (F_IBL * envBRDF.x + envBRDF.y);
+    vec3 kD_IBL = vec3(1.0) - F_IBL;
+    vec3 irradiance = texture(irradianceMap,N).rgb;
+    vec3 iblDiffuse = irradiance * albedo;
+    vec3 ambientIBL = (kD_IBL * iblDiffuse + specularIBL) * ao;
+    color += ambientIBL;
+    color = color / (color + vec3(1.0));
+    color = pow(color,vec3(1.0/2.2));
 //    FragColor = vec4(fs_in.TexCoord.x,fs_in.TexCoord.y,0.0,1.0);
     FragColor = vec4(color,1.0);
 }

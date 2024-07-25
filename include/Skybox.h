@@ -32,9 +32,11 @@ public:
 
     void Draw(GLuint skyboxTex,Camera camera,Window window){
         glEnable(GL_DEPTH_TEST);
+        glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
         glDepthFunc(GL_LEQUAL);
         shader->use();
         shader->setInt("skybox",0);
+        shader->setFloat("lod",3.4);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP,skyboxTex);
         glm::mat4 view = camera.GetViewMatrix();

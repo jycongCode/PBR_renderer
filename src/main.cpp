@@ -6,7 +6,7 @@
 #include "Sphere.h"
 #include "Material.h"
 #include "Light.h"
-#include "IrradianceMap.h"
+#include "IBL.h"
 #include "Utils.h"
 // region time
 float deltaTime = 0.0f;
@@ -77,14 +77,15 @@ int main()
     Shader shaderVis("TangentVis",true);
     DirLight lightDir(-1.0f,0.0f,1.0f,0.5f,0.5f,0.5f);
     IrradianceMap irradianceMap("../Resources/img/skybox",32,32,false);
+    SpecularIBL specularMap("../Resources/img/skybox",512,512, false);
+    IBL ibl(irradianceMap,specularMap);
     while(!window.ShouldWindowClose()){
         updateTime();
         keyboard_process(window.GetWindowHandle());
         window.ClearWindow();
         // render
-        glEnable(GL_DEPTH_TEST);
         skybox->Draw(camera,window);
-        sphere->Draw(camera,window,transform,shaderPBR,material,lightDir);
+        sphere->Draw(camera,window,transform,shaderPBR,material,lightDir,ibl);
 //        sphere->Draw(camera,window,transform,shaderVis,material,lightDir);
         window.WindowUpdate();
     }
