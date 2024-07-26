@@ -8,6 +8,8 @@
 #include <vector>
 #include <Shader.h>
 #include <assimp/scene.h>
+#include "Camera.h"
+#include "Window.h"
 struct Vertex{
     glm::vec3 Position;
     glm::vec3 Normal;
@@ -33,28 +35,67 @@ public :
         setupMesh();
     }
 
-    void Draw(Shader shader){
-        unsigned int diffuseNr = 1;
-        unsigned int specularNr = 1;
-        unsigned int reflectNr = 1;
-        unsigned int normalNr = 1;
-        for(unsigned int i = 0;i<textures.size();i++){
-            glActiveTexture(GL_TEXTURE0+i);
-            std::string number;
-            std::string name = textures[i].type;
-            if(name == "texture_diffuse")
-                number = std::to_string(diffuseNr++);
-            else if(name == "texture_specular")
-                number = std::to_string(specularNr++);
-            else if(name == "texture_reflect")
-                number = std::to_string(reflectNr++);
-            else if(name == "texture_normal")
-                number = std::to_string(normalNr++);
+    void Draw(Camera camera,Window window,Transform transform,Shader shader,PBRMaterial material,DirLight light,IBL ibl,bool isTextureIncluded = false){
+        shader.use();
+        shader.setMat4("model",transform.GetModel());
+        glm::mat4 view = camera.GetViewMatrix();
+        float scrWidth = static_cast<float>(window.GetWindowWidth());
+        float scrHeight = static_cast<float>(window.GetWindowHeight());
+        float aspectRatio = scrWidth / scrHeight;
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),aspectRatio,camera.nearPlane,camera.farPlane);
+        shader.setMat4("view",view);
+        shader.setMat4("projection",projection);
+        // camera
+        shader.setVec3("viewPos",camera.Position);
+        // light
+        shader.setVec3("light.Direction",light.Direction);
+        shader.setVec3("light.Color",light.Color);
+        if(isTextureIncluded){
+            unsigned int diffuseNr = 1;
+            unsigned int specularNr = 1;
+            unsigned int reflectNr = 1;
+            unsigned int normalNr = 1;
+            for(unsigned int i = 0;i<textures.size();i++){
+                glActiveTexture(GL_TEXTURE0+i);
+                std::string number;
+                std::string name = textures[i].type;
+                if(name == "texture_diffuse")
+                    number = std::to_string(diffuseNr++);
+                else if(name == "texture_specular")
+                    number = std::to_string(specularNr++);
+                else if(name == "texture_reflect")
+                    number = std::to_string(reflectNr++);
+                else if(name == "texture_normal")
+                    number = std::to_string(normalNr++);
 //            std::cout << "texture loaded:" << name << number << std::endl;
-            shader.setInt(("material."+name+number),i);
-            glBindTexture(GL_TEXTURE_2D,textures[i].id);
+                shader.setInt(("material."+name+number),i);
+                glBindTexture(GL_TEXTURE_2D,textures[i].id);
+            }
+        }else{
+            // material
+            shader.setInt("material.albedo",0);
+            shader.setInt("material.metallic",1);
+            shader.setInt("material.roughness",2);
+            shader.setInt("material.normal",3);
+            shader.setInt("irradianceMap",4);
+            shader.setInt("prefilterMap",5);
+            shader.setInt("brdfLUT",6);
+            shader.setFloat("material.ao",material.ao);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D,material.albedoTex);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D,material.metallicTex);
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D,material.roughnessTex);
+            glActiveTexture(GL_TEXTURE3);
+            glBindTexture(GL_TEXTURE_2D,material.normalTex);
+            glActiveTexture(GL_TEXTURE4);
+            glBindTexture(GL_TEXTURE_CUBE_MAP,ibl.irr.irradianceMap);
+            glActiveTexture(GL_TEXTURE5);
+            glBindTexture(GL_TEXTURE_CUBE_MAP,ibl.spec.prefilterMap);
+            glActiveTexture(GL_TEXTURE6);
+            glBindTexture(GL_TEXTURE_2D,ibl.spec.integrateBRDFMap);
         }
-        glActiveTexture(GL_TEXTURE0);
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES,indices.size(),GL_UNSIGNED_INT,0);
         glBindVertexArray(0);

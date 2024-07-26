@@ -7,6 +7,10 @@
 #include "Material.h"
 #include "Light.h"
 #include "IBL.h"
+#include "Model.h"
+#include <imgui/imgui.h>
+#include <imgui/backend/imgui_impl_glfw.h>
+#include <imgui/backend/imgui_impl_opengl3.h>
 #include "Utils.h"
 // region time
 float deltaTime = 0.0f;
@@ -24,6 +28,12 @@ Transform transform;
 void framebuffer_size_callback(GLFWwindow* window,int width,int height){
     glViewport(0,0,width,height);
 }
+
+
+
+float exposure = 0.0f;
+
+
 bool firstMouse = true;
 float lastX,lastY;
 bool isCamera = false;
@@ -64,39 +74,72 @@ void keyboard_process(GLFWwindow* window){
     if(glfwGetKey(window,GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
+    if(glfwGetKey(window,GLFW_KEY_UP) == GLFW_PRESS) {
+        exposure += 0.01;
+    }
+    if(glfwGetKey(window,GLFW_KEY_DOWN) == GLFW_PRESS) {
+        exposure -= 0.01;
+    }
 }
+
 
 int main()
 {
     WindowCallback callbacks(framebuffer_size_callback,mouse_pos_callback,mouse_button_callback,mouse_scroll_callback);
     window.SetUp(callbacks);
-    Skybox *skybox = new Skybox("../Resources/img/skybox",false);
-    Sphere *sphere = new Sphere();
-    PBRMaterial material("../Resources/Textures/RustedIron", false);
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+
+// Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOpenGL(window.GetWindowHandle(), true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+    ImGui_ImplOpenGL3_Init();
+
+
+    PBRMaterial material("../Resources/Textures/RustedIron", true);
     Shader shaderPBR("PBR");
     Shader shaderVis("TangentVis",true);
     DirLight lightDir(-1.0f,0.0f,1.0f,0.5f,0.5f,0.5f);
     IrradianceMap irradianceMap("../Resources/img/skybox",32,32,false);
     SpecularIBL specularMap("../Resources/img/skybox",512,512, false);
     IBL ibl(irradianceMap,specularMap);
+    transform.Scale(0.1f,0.1f,0.1f);
+    Skybox *skybox = new Skybox("../Resources/img/skybox",false);
+    Sphere *sphere = new Sphere();
+    Model model("../model/backpack/backpack.obj");
     while(!window.ShouldWindowClose()){
         updateTime();
         keyboard_process(window.GetWindowHandle());
         window.ClearWindow();
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        ImGui::ShowDemoWindow();
         // render
         skybox->Draw(camera,window);
-        sphere->Draw(camera,window,transform,shaderPBR,material,lightDir,ibl);
+        shaderPBR.use();
+        shaderPBR.setFloat("exposure",exposure);
+//        sphere->Draw(camera,window,transform,shaderPBR,material,lightDir,ibl);
+        model.Draw(camera,window,transform,shaderPBR,material,lightDir,ibl, false);
 //        sphere->Draw(camera,window,transform,shaderVis,material,lightDir);
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         window.WindowUpdate();
     }
     shaderVis.Destroy();
     shaderPBR.Destroy();
     skybox->Destroy();
     sphere->Destroy();
+    model.Destroy();
     irradianceMap.Destroy();
     window.CloseWindow();
     delete(skybox);
     delete(sphere);
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
     return 0;
 }
 

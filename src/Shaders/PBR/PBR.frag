@@ -26,6 +26,7 @@ uniform DirLight light;
 uniform samplerCube irradianceMap;
 uniform samplerCube prefilterMap;
 uniform sampler2D brdfLUT;
+uniform float exposure;
 uniform vec3 viewPos;
 const float PI = 3.14159265359;
 
@@ -77,6 +78,11 @@ void main(){
     float roughness = texture(material.roughness,fs_in.TexCoord).r;
     float metallic = texture(material.metallic,fs_in.TexCoord).r;
     vec3 albedo = texture(material.albedo,fs_in.TexCoord).rgb;
+
+//    roughness = 0.2;
+//    metallic = 0.6;
+//    albedo = vec3(0.8,0.0,0.0);
+
     float ao = material.ao;
     vec3 F0 = vec3(0.04);
     F0 = mix(F0,albedo,metallic);
@@ -113,12 +119,15 @@ void main(){
     vec2 envBRDF = texture(brdfLUT,vec2(max(dot(N,V),0.0),roughness)).rg;
     vec3 specularIBL = prefilterColor * (F_IBL * envBRDF.x + envBRDF.y);
     vec3 kD_IBL = vec3(1.0) - F_IBL;
+    kD_IBL *= 1.0-metallic;
     vec3 irradiance = texture(irradianceMap,N).rgb;
     vec3 iblDiffuse = irradiance * albedo;
     vec3 ambientIBL = (kD_IBL * iblDiffuse + specularIBL) * ao;
     color += ambientIBL;
     color = color / (color + vec3(1.0));
-    color = pow(color,vec3(1.0/2.2));
-//    FragColor = vec4(fs_in.TexCoord.x,fs_in.TexCoord.y,0.0,1.0);
-    FragColor = vec4(color,1.0);
+    vec3 mapped = vec3(1.0) - exp(-color * exposure);
+//    mapped = pow(mapped,vec3(1.0/2.2));
+//    color = pow(color,vec3(1.0/2.2));
+    FragColor = vec4(fs_in.TexCoord.x,fs_in.TexCoord.y,0.0,1.0);
+    FragColor = vec4(mapped,1.0);
 }

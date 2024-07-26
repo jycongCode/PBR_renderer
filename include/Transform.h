@@ -21,6 +21,7 @@ struct Transform{
 
     glm::mat4 GetModel(){
         glm::mat4 model(1.0f);
+        model = glm::scale(model,scale);
         model = toMat4(rotation) * model;
         return model;
     }
@@ -28,6 +29,10 @@ struct Transform{
     void Rotate(glm::vec3 axis,float angle){
         glm::quat delta = glm::angleAxis(angle,axis);
         rotation = delta * rotation;
+    }
+
+    void Scale(float x,float y,float z){
+        scale = glm::vec3(x,y,z);
     }
 };
 #endif //LEARNOPENGL_TRANSFORM_H

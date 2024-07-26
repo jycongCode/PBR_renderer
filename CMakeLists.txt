@@ -19,17 +19,14 @@ set(ASSIMP_LINK_1 ${LIB_DIR}/libassimp.3.dylib)
 set(ASSIMP_LINK_2 ${LIB_DIR}/libassimp.dylib)
 
 set(SOURCES ${SRC_DIR}/glad.c ${SRC_DIR}/main.cpp
-        include/Cube.h
-        include/Quad.h
-        include/Plane.h
-        include/Sphere.h
-        include/Skybox.h
-        include/Utils.h
-        include/Window.h
-        include/Transform.h
-        include/Light.h
-        include/Material.h
-        include/IBL.h
+        include/imgui/backend/imgui_impl_glfw.cpp
+        include/imgui/backend/imgui_impl_opengl3.cpp
+        include/imgui/misc/imgui_stdlib.cpp
+        include/imgui/imgui.cpp
+        include/imgui/imgui_demo.cpp
+        include/imgui/imgui_draw.cpp
+        include/imgui/imgui_tables.cpp
+        include/imgui/imgui_widgets.cpp
 )
 add_executable(LearnOpenGL ${SOURCES})
 # 链接GLFW库
