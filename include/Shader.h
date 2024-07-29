@@ -85,7 +85,7 @@ public:
         glDeleteShader(fragmentShader);
 //        glDeleteShader(geometryShader);
     }
-
+    Shader(){}
     Shader(const char *shaderName,bool hasGeom=false){
         std::string dir(shaderName);
         std::string prefix = "../src/Shaders/" + dir + "/" + dir;

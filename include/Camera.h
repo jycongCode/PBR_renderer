@@ -44,7 +44,8 @@ public:
     float MouseSensitivity;
     float Zoom;
     float ArmLength = 3.5f;
-    glm::vec3 targetPos = glm::vec3(0.0f);
+    float ArmHeight = 0.0f;
+    glm::vec3 targetPos = glm::vec3(0.0f,ArmHeight,0.0f);
 
     float nearPlane = 0.1f;
     float farPlane = 100.0f;
@@ -122,7 +123,7 @@ public:
             Zoom = 45.0f;
     }
 
-private:
+
     // calculates the front vector from the Camera's (updated) Euler Angles
     void updateCameraVectors()
     {
@@ -135,6 +136,7 @@ private:
         // also re-calculate the Right and Up vector
         Right = glm::normalize(glm::cross(Front, WorldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
         Up    = glm::normalize(glm::cross(Right, Front));
+        targetPos = glm::vec3(0.0f,ArmHeight,0.0f);
         Position = targetPos - ArmLength * Front;
     }
 };

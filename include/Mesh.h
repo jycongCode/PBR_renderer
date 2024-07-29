@@ -35,7 +35,7 @@ public :
         setupMesh();
     }
 
-    void Draw(Camera camera,Window window,Transform transform,Shader shader,PBRMaterial material,DirLight light,IBL ibl,bool isTextureIncluded = false){
+    void Draw(Camera camera,Window window,Transform transform,Shader shader,PBRMaterial material,Light light,IBL ibl,bool isTextureIncluded = false){
         shader.use();
         shader.setMat4("model",transform.GetModel());
         glm::mat4 view = camera.GetViewMatrix();
@@ -48,8 +48,9 @@ public :
         // camera
         shader.setVec3("viewPos",camera.Position);
         // light
+        shader.setVec3("light.Position",light.Position);
         shader.setVec3("light.Direction",light.Direction);
-        shader.setVec3("light.Color",light.Color);
+        shader.setVec3("light.Color",light.Color * light.Intensity);
         if(isTextureIncluded){
             unsigned int diffuseNr = 1;
             unsigned int specularNr = 1;
@@ -82,13 +83,13 @@ public :
             shader.setInt("brdfLUT",6);
             shader.setFloat("material.ao",material.ao);
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D,material.albedoTex);
+            glBindTexture(GL_TEXTURE_2D,material.albedo);
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D,material.metallicTex);
+            glBindTexture(GL_TEXTURE_2D,material.metallic);
             glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D,material.roughnessTex);
+            glBindTexture(GL_TEXTURE_2D,material.roughness);
             glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D,material.normalTex);
+            glBindTexture(GL_TEXTURE_2D,material.normal);
             glActiveTexture(GL_TEXTURE4);
             glBindTexture(GL_TEXTURE_CUBE_MAP,ibl.irr.irradianceMap);
             glActiveTexture(GL_TEXTURE5);
@@ -100,7 +101,66 @@ public :
         glDrawElements(GL_TRIANGLES,indices.size(),GL_UNSIGNED_INT,0);
         glBindVertexArray(0);
     }
-
+    void Draw(Camera camera,Window window,Transform transform,Shader shader,PBRpcMaterial material,Light light,IBL ibl,bool isTextureIncluded = false){
+        shader.use();
+        shader.setMat4("model",transform.GetModel());
+        glm::mat4 view = camera.GetViewMatrix();
+        float scrWidth = static_cast<float>(window.GetWindowWidth());
+        float scrHeight = static_cast<float>(window.GetWindowHeight());
+        float aspectRatio = scrWidth / scrHeight;
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),aspectRatio,camera.nearPlane,camera.farPlane);
+        shader.setMat4("view",view);
+        shader.setMat4("projection",projection);
+        // camera
+        shader.setVec3("viewPos",camera.Position);
+        // light
+        shader.setVec3("light.Position",light.Position);
+        shader.setVec3("light.Direction",light.Direction);
+        shader.setVec3("light.Color",light.Color * glm::vec3(light.Intensity));
+        if(isTextureIncluded){
+            unsigned int diffuseNr = 1;
+            unsigned int specularNr = 1;
+            unsigned int reflectNr = 1;
+            unsigned int normalNr = 1;
+            for(unsigned int i = 0;i<textures.size();i++){
+                glActiveTexture(GL_TEXTURE0+i);
+                std::string number;
+                std::string name = textures[i].type;
+                if(name == "texture_diffuse")
+                    number = std::to_string(diffuseNr++);
+                else if(name == "texture_specular")
+                    number = std::to_string(specularNr++);
+                else if(name == "texture_reflect")
+                    number = std::to_string(reflectNr++);
+                else if(name == "texture_normal")
+                    number = std::to_string(normalNr++);
+//            std::cout << "texture loaded:" << name << number << std::endl;
+                shader.setInt(("material."+name+number),i);
+                glBindTexture(GL_TEXTURE_2D,textures[i].id);
+            }
+        }else{
+            // material
+            shader.setInt("material.normal",0);
+            shader.setInt("irradianceMap",1);
+            shader.setInt("prefilterMap",2);
+            shader.setInt("brdfLUT",3);
+            shader.setFloat("material.ao",material.ao);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D,material.normal);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_CUBE_MAP,ibl.irr.irradianceMap);
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_CUBE_MAP,ibl.spec.prefilterMap);
+            glActiveTexture(GL_TEXTURE3);
+            glBindTexture(GL_TEXTURE_2D,ibl.spec.integrateBRDFMap);
+            shader.setVec3("material.albedo",material.albedo);
+            shader.setFloat("material.roughness",material.roughness);
+            shader.setFloat("material.metallic",material.metallic);
+        }
+        glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES,indices.size(),GL_UNSIGNED_INT,0);
+        glBindVertexArray(0);
+    }
     void Destroy(){
         glDeleteBuffers(1,&VBO);
         glDeleteBuffers(1,&EBO);

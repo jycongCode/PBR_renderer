@@ -14,17 +14,32 @@ enum LightType{
 };
 
 struct DirLight{
-    DirLight(float x,float y,float z,float r,float g,float b){
+    DirLight(float x,float y,float z,float r,float g,float b,float intensity){
         Direction = glm::vec3(x,y,z);
         Color = glm::vec3(r,g,b);
+        Intensity = intensity;
     }
     glm::vec3 Direction;
     glm::vec3 Color;
+    float Intensity;
 };
 
+struct Light
+{
+    glm::vec3 Position;
+    glm::vec3 Direction;
+    glm::vec3 Color;
+    float Intensity;
+};
 struct PointLight{
+    PointLight(float x,float y,float z,float r,float g,float b,float intensity){
+        Position = glm::vec3(x,y,z);
+        Color = glm::vec3(r,g,b);
+        Intensity = intensity;
+    }
     glm::vec3 Position;
     glm::vec3 Color;
+    float Intensity;
 };
 
 struct SpotLight{

@@ -98,7 +98,7 @@ public:
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
     }
 
-    void Draw(Camera camera,Window window,Transform transform,Shader shader,PBRMaterial material,DirLight light,IBL ibl){
+    void Draw(Camera camera,Window window,Transform transform,Shader shader,PBRMaterial material,Light light,IBL ibl){
         glBindVertexArray(sphereVAO);
         shader.use();
         // transform
@@ -122,19 +122,56 @@ public:
         shader.setInt("brdfLUT",6);
         shader.setFloat("material.ao",material.ao);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D,material.albedoTex);
+        glBindTexture(GL_TEXTURE_2D,material.albedo);
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D,material.metallicTex);
+        glBindTexture(GL_TEXTURE_2D,material.metallic);
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D,material.roughnessTex);
+        glBindTexture(GL_TEXTURE_2D,material.roughness);
         glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D,material.normalTex);
+        glBindTexture(GL_TEXTURE_2D,material.normal);
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_CUBE_MAP,ibl.irr.irradianceMap);
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_CUBE_MAP,ibl.spec.prefilterMap);
         glActiveTexture(GL_TEXTURE6);
         glBindTexture(GL_TEXTURE_2D,ibl.spec.integrateBRDFMap);
+        // light
+        shader.setVec3("light.Direction",light.Direction);
+        shader.setVec3("light.Color",light.Color);
+        glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+    }
+    void Draw(Camera camera,Window window,Transform transform,Shader shader,PBRpcMaterial material,Light light,IBL ibl){
+        glBindVertexArray(sphereVAO);
+        shader.use();
+        // transform
+        shader.setMat4("model",transform.GetModel());
+        glm::mat4 view = camera.GetViewMatrix();
+        float scrWidth = static_cast<float>(window.GetWindowWidth());
+        float scrHeight = static_cast<float>(window.GetWindowHeight());
+        float aspectRatio = scrWidth / scrHeight;
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),aspectRatio,camera.nearPlane,camera.farPlane);
+        shader.setMat4("view",view);
+        shader.setMat4("projection",projection);
+        // camera
+        shader.setVec3("viewPos",camera.Position);
+        // material
+        shader.setInt("material.normal",0);
+        shader.setInt("irradianceMap",1);
+        shader.setInt("prefilterMap",2);
+        shader.setInt("brdfLUT",3);
+        shader.setFloat("material.ao",material.ao);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D,material.normal);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_CUBE_MAP,ibl.irr.irradianceMap);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_CUBE_MAP,ibl.spec.prefilterMap);
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D,ibl.spec.integrateBRDFMap);
+        shader.setVec3("material.albedo",material.albedo);
+        shader.setFloat("material.roughness",material.roughness);
+        shader.setFloat("material.metallic",material.metallic);
         // light
         shader.setVec3("light.Direction",light.Direction);
         shader.setVec3("light.Color",light.Color);

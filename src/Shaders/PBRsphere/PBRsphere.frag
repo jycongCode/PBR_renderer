@@ -9,10 +9,9 @@ in VS_OUT{
 }fs_in;
 
 struct PBRMaterial{
-    sampler2D albedo;
-    sampler2D metallic;
-    sampler2D roughness;
-    sampler2D normal;
+    vec3 albedo;
+    float metallic;
+    float roughness;
     float ao;
 };
 uniform PBRMaterial material;
@@ -32,9 +31,9 @@ uniform float exposure;
 uniform bool gammaCorrection;
 uniform float gamma;
 uniform vec3 viewPos;
+const float PI = 3.14159265359;
 uniform bool isEnvironmentLight;
 uniform bool isDirectLight;
-const float PI = 3.14159265359;
 
 float DistributionGGX(vec3 N,vec3 H,float roughness)
 {
@@ -77,13 +76,17 @@ vec3 fresnelSchlickRoughness(float cosTheta,vec3 F0,float roughness){
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
 }
 void main(){
-    vec3 N = normalize(fs_in.TBN * texture(material.normal,fs_in.TexCoord).xyz);
-//    N = fs_in.Normal;
+//    vec3 N = normalize(fs_in.TBN * texture(material.normal,fs_in.TexCoord).xyz);
+    N = fs_in.Normal;
     vec3 V = normalize(viewPos - fs_in.FragPos);
 
-    float roughness = texture(material.roughness,fs_in.TexCoord).r;
-    float metallic = texture(material.metallic,fs_in.TexCoord).r;
-    vec3 albedo = texture(material.albedo,fs_in.TexCoord).rgb;
+    float roughness = material.roughness;
+    float metallic = material.metallic;
+    vec3 albedo = material.albedo;
+
+    //    roughness = 0.2;
+    //    metallic = 0.6;
+    //    albedo = vec3(0.8,0.0,0.0);
 
     float ao = material.ao;
 
@@ -91,7 +94,7 @@ void main(){
     F0 = mix(F0,albedo,metallic);
 
     vec3 Lo = vec3(0.0);
-    vec3 L = normalize(light.Position - fs_in.FragPos);
+    vec3 L = normalize(light.Position-fs_in.FragPos);
     vec3 H = normalize(L + V);
     vec3 radiance = light.Color;
     // cook-torrance brdf
@@ -111,8 +114,10 @@ void main(){
     Lo += (kD * albedo / PI + specular) * radiance * NdotL;
     vec3 ambient = vec3(0.03) * albedo * ao;
     vec3 color = ambient;
+
+    float distance = length(L);
     if(isDirectLight){
-        color += Lo;
+        color += Lo * vec3(1.0 / (distance * distance));
     }
 
     vec3 F_IBL = fresnelSchlickRoughness(max(dot(N,V),0.0),F0,roughness);
@@ -130,7 +135,6 @@ void main(){
     if(isEnvironmentLight){
         color += ambientIBL;
     }
-
     if(hdr){
         color = vec3(1.0) - exp(-color * exposure);
     }

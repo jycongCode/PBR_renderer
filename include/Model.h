@@ -15,9 +15,15 @@ public:
     Model(char* path){
         loadModel(path);
     }
-    void Draw(Camera camera,Window window,Transform transform,Shader shader,PBRMaterial material,DirLight light,IBL ibl,bool isTextureIncluded = false){
+    void Draw(Camera camera,Window window,Transform transform,Shader shader,PBRMaterial material,Light light,IBL ibl,bool isTextureIncluded = false){
         for(unsigned int i = 0;i<meshes.size();++i){
             meshes[i].Draw(camera,window,transform,shader,material,light,ibl,isTextureIncluded);
+        }
+    }
+
+    void Draw(Camera camera,Window window,Transform transform,Shader shader,PBRpcMaterial material,Light light,IBL ibl,bool isTextureIncluded = false) {
+        for (unsigned int i = 0; i < meshes.size(); ++i) {
+            meshes[i].Draw(camera, window, transform, shader, material, light, ibl, isTextureIncluded);
         }
     }
 
