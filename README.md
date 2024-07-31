@@ -1,6 +1,6 @@
 # PBR_renderer
 This project performs as a practice after learning learnopengl tutorial \
-Implements a simple physics based rendering pipeline \
+Implements a simple physics based rendering pipeline 
 
 **In which you can**:
 - load obj format files
