@@ -77,8 +77,8 @@ vec3 fresnelSchlickRoughness(float cosTheta,vec3 F0,float roughness){
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
 }
 void main(){
-    vec3 N = normalize(fs_in.TBN * texture(material.normal,fs_in.TexCoord).xyz);
-    //    N = fs_in.Normal;
+//    vec3 N = normalize(fs_in.TBN * texture(material.normal,fs_in.TexCoord).xyz);
+    vec3 N = fs_in.Normal;
     vec3 V = normalize(viewPos - fs_in.FragPos);
 
     float roughness = material.roughness;

@@ -173,8 +173,10 @@ public:
         shader.setFloat("material.roughness",material.roughness);
         shader.setFloat("material.metallic",material.metallic);
         // light
+
+        shader.setVec3("light.Position",light.Position);
         shader.setVec3("light.Direction",light.Direction);
-        shader.setVec3("light.Color",light.Color);
+        shader.setVec3("light.Color",light.Color * light.Intensity);
         glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
     }

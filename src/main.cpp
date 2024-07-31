@@ -82,7 +82,7 @@ void keyboard_process(GLFWwindow* window){
 }
 
 bool showSkyBox = true;
-bool isPC = false;
+bool isPC = true;
 
 ImVec4 albedoColor = ImVec4(0.5f,0.5f,0.5f,1.0f);
 float metallic = 0.5f;
@@ -125,7 +125,7 @@ int main()
     IBL ibl(irradianceMap,specularMap);
     Skybox *skybox = new Skybox("../Resources/img/skybox",false);
     Sphere *sphere = new Sphere();
-    Model model("../model/nanosuit/nanosuit.obj");
+    Model model("../model/backpack/backpack.obj");
 
     while(!window.ShouldWindowClose()){
         updateTime();
@@ -203,12 +203,13 @@ int main()
         shaderToDraw.setFloat("gamma",gammaParam);
         shaderToDraw.setBool("isDirectLight",isLightOn);
         shaderToDraw.setBool("isEnvironmentLight",isCubeMapOn);
+
         if(isPC){
-//            sphere->Draw(camera,window,transform,shaderToDraw,materialpc,light,ibl);
-            model.Draw(camera,window,transform,shaderToDraw,materialpc,light,ibl, false);
+            sphere->Draw(camera,window,transform,shaderToDraw,materialpc,light,ibl);
+//            model.Draw(camera,window,transform,shaderToDraw,materialpc,light,ibl, false);
         }else{
-//            sphere->Draw(camera,window,transform,shaderToDraw,material,light,ibl);
-            model.Draw(camera,window,transform,shaderToDraw,material,light,ibl, false);
+            sphere->Draw(camera,window,transform,shaderToDraw,material,light,ibl);
+//            model.Draw(camera,window,transform,shaderToDraw,material,light,ibl, false);
         }
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         window.WindowUpdate();
